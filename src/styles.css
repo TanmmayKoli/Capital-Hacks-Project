@@ -1,0 +1,371 @@
+/* Sensory-friendly: muted colors, no flashing, big tap targets, gentle motion only. */
+:root {
+  --bg: #f5f3ee; --card: #ffffff; --ink: #2f3a40; --muted: #556166; --line: #e3dfd6;
+  --accent: #3f6e70; --accent-soft: #dceeee; --warn: #a8683a; --ok: #477452;
+  --radius: 18px; --shadow: 0 2px 10px rgba(47, 58, 64, .06);
+  font-family: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--ink); background: var(--bg);
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: var(--bg); line-height: 1.45; }
+h1, h2, h3 { line-height: 1.2; margin: 0 0 .5em; }
+h1 { font-size: clamp(1.6rem, 3vw, 2.2rem); }
+p { margin: 0 0 1em; }
+button { font: inherit; color: inherit; cursor: pointer; }
+input, select { font: inherit; padding: .8rem 1rem; border-radius: 12px; border: 2px solid var(--line); background: #fff; width: 100%; }
+input:focus, select:focus, button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+/* Reduced motion: keep state changes, drop movement. The breathing circle fades instead of growing. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; scroll-behavior: auto !important; }
+  .tile, .overlay { transition: none !important; }
+  .breath-circle { transform: scale(.75) !important; transition: opacity 1.5s ease-in-out !important; }
+}
+
+.wrap { max-width: 960px; margin: 0 auto; padding: 24px 20px 60px; }
+.card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 24px; border: 1px solid var(--line); }
+.row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.spacer { flex: 1; }
+.muted { color: var(--muted); }
+.center { text-align: center; }
+.stack > * + * { margin-top: 16px; }
+
+.btn { border: none; border-radius: 12px; padding: .85rem 1.4rem; background: var(--accent); color: #fff; font-weight: 700; font-size: 1.05rem; }
+.btn:hover { filter: brightness(1.05); }
+.btn.ghost { background: transparent; color: var(--accent); border: 2px solid var(--accent); }
+.btn.ok { background: var(--ok); }
+.btn.small { padding: .45rem .9rem; font-size: .9rem; border-radius: 10px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+.topbar { display: flex; align-items: center; gap: 12px; padding: 14px 20px; background: #fff; border-bottom: 1px solid var(--line); }
+.brand { font-weight: 800; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; text-decoration: none; color: var(--ink); }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: .25rem .7rem; border-radius: 999px; font-size: .85rem; background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.pill.warn { background: #f6e6d9; color: #7a4513; }
+.pill.gray { background: #ecebe7; color: var(--muted); }
+
+/* Big choice tiles (kid-facing) */
+.choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; }
+.choices.two { grid-template-columns: repeat(2, 1fr); }
+.tile { background: #fff; border: 3px solid var(--line); border-radius: var(--radius); padding: 18px 12px; text-align: center; min-height: 130px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 1.1rem; transition: transform .15s, border-color .15s; }
+.tile .emoji { font-size: 2.6rem; line-height: 1; }
+.tile:hover { transform: translateY(-2px); }
+.tile.selected { border-color: var(--accent); background: var(--accent-soft); }
+.tile.small { min-height: 100px; font-size: 1rem; }
+.tile.small .emoji { font-size: 2rem; }
+
+.progress { height: 10px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.progress > div { height: 100%; background: var(--accent); transition: width .4s ease; }
+
+/* Break overlay = the "locked" screen */
+.overlay { position: fixed; inset: 0; z-index: 50; background: var(--bg); overflow: auto; display: flex; align-items: flex-start; justify-content: center; padding: 32px 20px; transition: background .8s ease; }
+.overlay .inner { width: 100%; max-width: 760px; }
+
+/* Breathing animation */
+.breath-wrap { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px 0; }
+.breath-ring { width: 260px; height: 260px; border-radius: 50%; display: grid; place-items: center; border: 3px dashed rgba(47,58,64,.12); }
+.breath-circle { width: 240px; height: 240px; border-radius: 50%; opacity: .85; transform: scale(.45); }
+.breath-text { font-size: 1.5rem; font-weight: 800; margin: 6px 0 0; }
+.breath-timer { color: var(--muted); font-variant-numeric: tabular-nums; margin: 0; }
+
+
+/* Instructor */
+.grid { display: grid; gap: 16px; }
+.grid.students { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.student-card { display: flex; flex-direction: column; gap: 10px; }
+.student-card.onbreak { border-color: var(--warn); box-shadow: 0 0 0 3px #f6e6d9; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: #c9c5bb; display: inline-block; }
+.dot.on { background: var(--ok); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.stat { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+.stat b { display: block; font-size: 1.6rem; }
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+.chart-box { position: relative; height: 260px; }
+table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 700; font-size: .85rem; }
+.feed { max-height: 220px; overflow: auto; font-size: .92rem; }
+.feed div { padding: 6px 0; border-bottom: 1px dashed var(--line); }
+.tabs { display: flex; gap: 8px; }
+.tabs button { background: none; border: 2px solid var(--line); border-radius: 10px; padding: .45rem 1rem; font-weight: 700; }
+.tabs button.active { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+.hidden { display: none !important; }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: .7rem 1.2rem; border-radius: 12px; z-index: 99; }
+
+/* ---------------- v2 additions ---------------- */
+label { display: flex; flex-direction: column; gap: 6px; font-weight: 700; }
+label.small, .small { font-size: .9rem; }
+textarea { font: inherit; padding: .8rem 1rem; border-radius: 12px; border: 2px solid var(--line); background: #fff; width: 100%; resize: vertical; }
+textarea:focus { outline: 3px solid var(--accent); outline-offset: 2px; }
+.err { color: #a2492b; font-weight: 700; margin: 0; }
+.say-row { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.speak { border: 2px solid var(--line); background: #fff; border-radius: 999px; width: 36px; height: 36px; font-size: 1rem; line-height: 1; flex: none; }
+.speak:hover { border-color: var(--accent); }
+
+/* Onboarding menu 3 */
+.freq-row { display: flex; flex-direction: column; gap: 10px; padding: 16px 18px; border-radius: 0 var(--radius) var(--radius) 0; }
+.freq-label { font-weight: 800; font-size: 1.15rem; }
+.seg { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.seg button { border: 2px solid var(--line); background: #fff; border-radius: 10px; padding: .6rem .3rem; font-weight: 700; font-size: .9rem; }
+.seg button.selected { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+@media (max-width: 560px) { .seg { grid-template-columns: repeat(3, 1fr); } }
+
+/* Coping strategies */
+.strat { display: flex; gap: 16px; align-items: center; padding: 18px; }
+.strat-icon { font-size: 2.4rem; line-height: 1; }
+.strat b { font-size: 1.15rem; }
+
+/* Strength scale */
+.strength { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; align-items: end; }
+.strength .tile { padding: 8px; font-size: .95rem; gap: 2px; }
+
+/* Instructor cards */
+.student-card.needs-you { border-color: #d9826b; box-shadow: 0 0 0 4px #f7dcd3; }
+.break-info { display: flex; flex-direction: column; gap: 6px; }
+.break-info .reason { background: var(--bg); border-radius: 10px; padding: 8px 10px; font-style: italic; }
+.prompt { background: #fbeee9; border: 2px solid #e8b4a2; border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+.prompt.ok { background: #e4efe6; border-color: #a9c9b1; }
+.stim-grid { display: flex; flex-direction: column; gap: 6px; }
+.stim { display: flex; gap: 6px; }
+.stim .btn:first-child { flex: 1; text-align: left; }
+.last-report { background: var(--bg); border-radius: 10px; padding: 8px 10px; font-size: .92rem; }
+details { border-top: 1px dashed var(--line); padding-top: 8px; }
+details summary { cursor: pointer; font-weight: 700; color: var(--accent); }
+.profile { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; font-size: .92rem; }
+.freq-mini { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.reason-cell { max-width: 320px; }
+
+/* Break report modal (instructor) */
+.report-modal { position: fixed; inset: 0; background: rgba(47, 58, 64, .35); display: grid; place-items: center; z-index: 90; padding: 20px; }
+.report-modal .card { width: 100%; max-width: 520px; }
+.report-modal th { width: 34%; }
+
+/* ---------------- harden pass ---------------- */
+/* Inputs inside bold labels inherited the bold weight, so placeholders looked like real answers. */
+input, select, textarea { font-weight: 400; color: var(--ink); }
+::placeholder { color: #7d878b; font-weight: 400; opacity: 1; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+[hidden] { display: none !important; }
+
+/* Break overlay: fades in instead of slamming in; quiet control bar pinned to the bottom. */
+.overlay { opacity: 0; transition: opacity .35s ease-out, background .8s ease; padding-bottom: 96px; }
+.overlay.in { opacity: 1; }
+.overlay [tabindex="-1"]:focus { outline: none; }
+.break-bar { position: fixed; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  padding: 14px max(20px, calc((100vw - 760px) / 2)); background: rgba(255, 255, 255, .85); border-top: 1px solid var(--line); }
+.break-bar .btn { min-height: 44px; color: var(--ink); border-color: var(--line); background: #fff; }
+.reassure { font-size: 1.15rem; font-weight: 700; color: var(--ink); margin: 0; }
+.choices.five { grid-template-columns: repeat(5, 1fr); }
+@media (max-width: 760px) { .choices.five { grid-template-columns: repeat(3, 1fr); } }
+
+/* Reason chips */
+.chip { border: 2px solid var(--line); background: #fff; border-radius: 999px; padding: .6rem 1rem; min-height: 44px; font-weight: 700; font-size: .95rem; }
+.chip[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); color: #2f5d5f; }
+
+/* Toasts: one at a time, kept clear of the break control bar. */
+.toast { bottom: 84px; display: flex; gap: 12px; align-items: center; max-width: min(92vw, 560px); z-index: 120; }
+.toast-action { background: none; border: 1px solid rgba(255,255,255,.6); color: #fff; border-radius: 10px; padding: .3rem .7rem; font-weight: 700; }
+
+/* Offline notice */
+.offline-bar { position: sticky; top: 0; z-index: 130; background: #f6e6d9; color: #6e3f1d; text-align: center; padding: 8px 16px; font-weight: 700; }
+
+/* Instructor */
+.student-name { font-size: 1.15rem; }
+.answers { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.answers .reason, .break-info .reason { max-height: 7.5em; overflow: auto; overflow-wrap: anywhere; }
+.pending { background: #f6e6d9; border-radius: 12px; padding: 8px 10px; font-weight: 700; color: #6e3f1d; }
+.join-view { position: fixed; inset: 0; z-index: 140; background: var(--bg); display: grid; place-items: center; padding: 24px; }
+.join-code { font-size: clamp(4rem, 16vw, 11rem); font-weight: 800; letter-spacing: .12em; line-height: 1; }
+.card-head { display: grid; grid-template-columns: auto 1fr; align-items: center; column-gap: 10px; row-gap: 6px; }
+.card-head .student-name { min-width: 0; overflow-wrap: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card-head .pill { grid-column: 2; justify-self: start; }
+
+/* ---------------- distill: student home ---------------- */
+.home { max-width: 720px; padding-top: 8vh; }
+.home-main { padding: 12px 0 24px; }
+.history { border-top: 1px solid var(--line); padding-top: 24px; }
+.reflect { font-size: 1.1rem; text-align: center; max-width: 52ch; margin: 0 auto 12px; }
+.my-checkins { border: none; text-align: center; }
+.my-checkins > summary { display: inline-block; padding: .5rem .2rem; }
+.checkin-list { list-style: none; padding: 0; margin: 12px auto 0; max-width: 420px; text-align: left; }
+.checkin-list li { padding: 10px 0; border-bottom: 1px solid var(--line); display: flex; gap: 12px; }
+
+/* ---------------- layout + quieter: instructor live view ---------------- */
+/* Needs-you strip: the one place that asks for attention. */
+.needs { position: sticky; top: 0; z-index: 20; background: #fdf3e7; border: 1px solid #efd3b0; border-radius: var(--radius); padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+.needs-title { font-size: .95rem; margin: 0; color: #7a4513; }
+.need { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; background: #fff; border-radius: 12px; padding: 8px 10px; }
+.need b { font-size: 1.05rem; }
+/* Calmer roster: attention colour instead of alarm red, quiet idle actions, tighter cards. */
+.grid.students { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+.student-card { padding: 16px 18px; gap: 8px; box-shadow: none; }
+.student-card.onbreak { border-color: #e7c9a8; box-shadow: none; }
+.student-card.needs-you { border-color: #d99a5b; box-shadow: 0 0 0 3px #fbe9d6; }
+.pill.attn { background: #fbe9d6; color: #7a4513; }
+.card-actions { display: flex; justify-content: flex-end; }
+.btn.quiet { color: var(--ink); border: 1px solid var(--line); background: #fff; font-weight: 600; }
+.btn.quiet:hover { border-color: var(--accent); }
+.activity { border-top: none; }
+.activity > summary { padding: 4px 0; }
+.activity .feed { margin-top: 8px; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 4px 14px; }
+.grid.students { align-items: start; }
+/* The strip is the alert; the in-card picker is a plain section, not a second loud box. */
+.student-card .prompt { background: var(--bg); border: none; border-radius: 12px; }
+.student-card .prompt.ok { background: #eaf2ec; }
+[data-profile] > summary { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+
+/* ---------------- colorize + audit ---------------- */
+::selection { background: #cfe3e3; color: var(--ink); }
+:root { accent-color: var(--accent); caret-color: var(--accent); }
+.ic { vertical-align: -0.2em; flex: none; stroke-width: 1.75; }
+.brand .ic { color: var(--accent); }
+.hero-ic { display: flex; justify-content: center; color: var(--accent); margin-bottom: 4px; }
+.hero-ic .ic { width: 2.5rem; height: 2.5rem; }
+.ok-ic { color: var(--ok); }
+.tile .emoji .ic { width: 2.4rem; height: 2.4rem; }
+.tile .emoji { color: var(--accent); line-height: 0; }
+.lbl-ic { display: inline-flex; align-items: center; gap: 8px; }
+.lbl-ic .ic { color: var(--accent); }
+/* Emotion colour lives in a small chip next to the label (no side stripes). */
+.emo-chip { display: inline-grid; place-items: center; width: 2.2rem; height: 2.2rem; border-radius: 50%; margin-right: 10px; vertical-align: middle; }
+.emo-chip .ic { width: 1.3rem; height: 1.3rem; }
+.freq-row { border-radius: var(--radius); }
+.emo-inline .ic { width: 1.15em; height: 1.15em; }
+.strat-icon { color: var(--accent); line-height: 0; }
+.strat-icon .ic { width: 2.2rem; height: 2.2rem; }
+/* Tap targets: 44px minimum for everything a student or teacher taps. */
+.speak { width: 44px; height: 44px; display: inline-grid; place-items: center; color: var(--accent); }
+.speak .ic { width: 1.2rem; height: 1.2rem; }
+.btn.small, .tabs button, .chip { min-height: 44px; }
+.stim .btn { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.card-head .pill { min-height: 0; }
+details > summary { min-height: 44px; display: flex; align-items: center; }
+details > summary::-webkit-details-marker { display: none; }
+details > summary::before { content: ""; width: .45em; height: .45em; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: rotate(-45deg); margin-right: .6em; flex: none; transition: transform .2s ease-out; }
+details[open] > summary::before { transform: rotate(45deg); }
+.my-checkins > summary { display: inline-flex; }
+
+/* ---------------- polish ---------------- */
+.lock-badge { display: inline-flex; gap: 6px; align-items: center; font-size: .9rem; color: var(--muted); }
+input[type="file"] { padding: .5rem; border-style: dashed; background: var(--bg); }
+input[type="file"]::file-selector-button { font: inherit; font-weight: 700; border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 10px; padding: .45rem .9rem; margin-right: 10px; cursor: pointer; }
+.toast { box-shadow: 0 6px 20px rgba(47, 58, 64, .18); }
+
+/* ---------------- phase 1: icons instead of typing ---------------- */
+.choices.six { grid-template-columns: repeat(3, 1fr); }
+.choices.reasons { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 760px) { .choices.reasons { grid-template-columns: repeat(2, 1fr); } }
+.strength-num { font-size: 1.6rem; }
+#words { text-align: left; }
+.reason-actions { justify-content: center; }
+
+/* ---------------- phase 2: class context ---------------- */
+.context-bar { display: grid; gap: 8px; padding: 16px 18px; }
+.ctx-group { display: flex; flex-direction: column; gap: 6px; }
+.ctx-label { font-weight: 700; font-size: .9rem; }
+.context-bar .seg { max-width: 640px; }
+.context-bar .seg button { min-height: 44px; padding: .4rem .2rem; }
+details > summary > .muted { margin-left: .35em; overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------------- phase 3: strategies + did it help ---------------- */
+.strat-row { display: flex; align-items: center; gap: 10px; }
+.strat-pick { flex: 1; text-align: left; font: inherit; color: inherit; cursor: pointer; border: 3px solid var(--line); }
+.strat-pick[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.strat-text { display: flex; flex-direction: column; gap: 2px; }
+.strat-text .pill { align-self: flex-start; }
+.more-ideas { border: none; }
+.more-ideas > .stack { margin-top: 12px; }
+.calm-done { padding: 36px; }
+.helped-q { font-weight: 700; font-size: 1.1rem; margin: 0; }
+.helped-seg { grid-template-columns: repeat(3, 1fr); max-width: 420px; margin: 0 auto; }
+.helped-seg button { min-height: 52px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.helps-me ol { margin: 8px 0 0; padding-left: 1.4em; line-height: 1.8; }
+
+/* ---------------- phase 4: drawing pad ---------------- */
+.pad { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.pad-canvas { width: min(100%, 640px); height: 340px; background: #fff; border: 2px solid var(--line); border-radius: 12px; touch-action: none; cursor: crosshair; }
+.pad-tools { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.pad-swatch { width: 44px; height: 44px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 2px var(--line); }
+.pad-swatch[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--ink); }
+
+/* ---------------- subjects + own ideas ---------------- */
+.choices.subjects { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.choices.subjects .tile[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.own-list { list-style: none; margin: 0; padding: 0; }
+.own-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.own-list:empty { display: none; }
+.own-add { flex-wrap: nowrap; }
+.own-add input { flex: 1; }
+.list-head { font-size: 1.05rem; margin: 8px 0 0; }
+.more-ideas > .own-add { margin-top: 10px; }
+.subject-card { margin-top: 16px; overflow: auto; }
+.subject-top { font-size: 1.05rem; }
+.trace-canvas { cursor: pointer; }
+.trace-hint { margin: 0; font-weight: 700; }
+
+/* ---- Polish: utility classes replacing inline layout styles ---- */
+.m0 { margin: 0; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.gap-8 { gap: 8px; }
+.w-auto { width: auto; }
+.scroll-x { overflow: auto; }
+.row-center { justify-content: center; }
+.lead { font-size: 1.1rem; }
+.h-note { font-weight: 400; font-size: .9rem; }
+.btn-big { font-size: 1.25rem; padding: 1rem 2rem; }
+.code-input { text-transform: uppercase; letter-spacing: .15em; }
+.wrap-onboard { max-width: 760px; padding-top: 4vh; }
+.wrap-setup { max-width: 560px; padding-top: 7vh; }
+.wrap-wide { max-width: 1240px; }
+.tabs-gap { margin-left: 12px; }
+.join-line { font-size: 1.4rem; margin: 0; }
+.stack.stack-tight { margin-top: 8px; }
+.stack.stack-tight > * + * { margin-top: 8px; }
+[data-resume] { width: 100%; }
+/* Strength tiles grow with the number, so "bigger" reads without words. */
+.strength-tile { min-height: 0; }
+.strength-tile[data-k="1"] { height: 106px; }
+.strength-tile[data-k="2"] { height: 132px; }
+.strength-tile[data-k="3"] { height: 158px; }
+.strength-tile[data-k="4"] { height: 184px; }
+.strength-tile[data-k="5"] { height: 210px; }
+/* The break bar's main action stays a filled primary button, so "what do I do next" is obvious. */
+.break-bar .btn:not(.ghost) { background: var(--accent); border-color: var(--accent); color: #fff; min-height: 52px; padding: .8rem 1.6rem; }
+/* Canvas activities: themed focus ring instead of the browser default. */
+.pad-canvas:focus { outline: none; }
+.pad-canvas:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+label.row { flex-direction: row; align-items: center; }
+/* Kid home: "My calm-down plan" – a quiet reminder of their own picks, read-only. */
+.plan { max-width: 640px; margin-left: auto; margin-right: auto; padding: 20px 24px; }
+.plan-h { display: flex; align-items: center; gap: 8px; font-size: 1.15rem; margin: 0 0 8px; }
+.plan-h .ic { color: var(--accent); }
+.plan-list { list-style: none; margin: 0; padding: 0; }
+.plan-item { display: flex; align-items: center; gap: 14px; padding: 12px 0; }
+.plan-item + .plan-item { border-top: 1px solid var(--line); }
+.plan-item .strat-icon .ic { width: 1.8rem; height: 1.8rem; }
+.plan-text { flex: 1; display: flex; flex-direction: column; gap: 2px; text-align: left; }
+
+/* ---- Timer flow: activity countdown (kid) and timer presets (teacher) ---- */
+.timer-box { min-height: 28px; }
+.timer-box.waiting { font-size: .95rem; }
+.timer-box.waiting .ic { vertical-align: -3px; margin-right: 4px; }
+.timer-box.set { animation: timer-pop .45s ease-out; }
+.timer-clock { display: flex; align-items: baseline; justify-content: center; gap: 8px; font-size: 2.6rem; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--ink); }
+.timer-clock small { font-size: 1rem; font-weight: 700; color: var(--muted); }
+.timer-bar { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; max-width: 360px; margin: 6px auto 0; }
+.timer-bar > div { height: 100%; background: var(--accent); border-radius: 999px; transition: width .25s linear; }
+@keyframes timer-pop { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .timer-bar > div { transition: none; } }
+.activity .hero-ic .ic { width: 3rem; height: 3rem; }
+.choices.activities { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+.act-tile[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.timer-presets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.need .timer-presets { margin-top: 0; }
+/* Switching activities (kid) and the teacher's override controls */
+.switch-row { margin-top: 4px; }
+.teacher-ctl { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+/* Custom timer stepper (teacher) */
+.timer-custom { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.custom-val { min-width: 3.2em; text-align: center; font-weight: 800; font-variant-numeric: tabular-nums; font-size: 1.1rem; }

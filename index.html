@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calm Compass</title>
+  <link rel="stylesheet" href="/src/styles.css" />
+</head>
+<body>
+  <main class="wrap stack" style="max-width:720px;padding-top:8vh">
+    <div class="center stack">
+      <div class="hero-ic" id="logo"></div>
+      <h1>Calm Compass</h1>
+      <p class="muted">Take a quick calm break when class feels like a lot: check in, reset for 60 seconds, get back to learning.</p>
+    </div>
+    <div class="choices two">
+      <a class="tile" href="/kid" style="text-decoration:none;color:inherit"><span class="emoji" data-ic="student"></span>I'm a student</a>
+      <a class="tile" href="/teacher" style="text-decoration:none;color:inherit"><span class="emoji" data-ic="school"></span>I'm a teacher</a>
+    </div>
+    <p class="center muted" id="mode"></p>
+  </main>
+  <script type="module">
+    import '/src/fonts.js';
+    import { icon } from '/src/icons.js';
+    import { MODE } from '/src/db.js';
+    document.getElementById('logo').innerHTML = icon('compass', { size: '3rem' });
+    document.querySelectorAll('[data-ic]').forEach((el) => (el.innerHTML = icon(el.dataset.ic, { size: '2.4rem' })));
+    document.getElementById('mode').textContent =
+      MODE === 'supabase' ? 'Connected to Supabase' : 'Demo mode: open the student and teacher pages as tabs in this same browser';
+  </script>
+</body>
+</html>
